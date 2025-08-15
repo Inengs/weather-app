@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+
+
+<body>
+    <section class="top" id="top">
+        <!-- <label for="placeName">Search out a place:</label> -->
+        <input id="placeName" name="placeName" placeholder="search">
+        <button id="searchplace"><i class="fa fa-search"></i></button>
+    </section>
+
+    <section class="middle" id="middle">
+        <h1 id="WeatherReports">Weather Reports</h1>
+        <div class="currentWeather" class="card">
+            <p class="currentWeatherText" id="temperature">Temperature: </p>
+            <p class="currentWeatherText" id="weatherCondition">Weather Condition</p>
+            <p class="currentWeatherText" id="feelsLike">FeelsLike: </p>
+        </div>
+
+        <div id="precipitation" class="card">
+            <p class="precipitationText" id="precprob">
+                Precipitation probability:
+            </p>
+            <p class="precipitationText" id="precType">Precipitation Type: </p>
+        </div>
+
+
+
+        <div id="HumidityandWind" class="card">
+            <p class="HumidityandWind" id="Humidity">Humidity: </p>
+            <p class="HumidityandWindText" id="WindSpeed">WindSpeed</p>
+            <p class="HumidityandWindText" id="WindDirection">WindDirection: </p>
+        </div>
+    </section>
+
+    <section class="bottom" id="forecast">
+        <button class="forecastbuttons" id="1hr">1hr</button>
+        <button class="forecastbuttons" id="5hrs">5hrs</button>
+        <button class="forecastbuttons" id="1day">1day</button>
+        <button class="forecastbuttons" id="1wk">1wk</button>
+        <div id="Forecast" class="card"></div>
+    </section>
+</body>
+
+</html>
