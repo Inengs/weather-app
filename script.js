@@ -1,25 +1,148 @@
-const button = document.getElementById("searchplace")
-// const inputPlace = document.getElementById("placeName")
-let long;
-let lat;
-let searchValue;
+const button = document.getElementById("searchplace");
+const inputPlace = document.getElementById("placeName");
+const currentTemp = document.getElementById("temperature");
+const currentWC = document.getElementById("weatherCondition");
+const feelsLike = document.getElementById("feelsLike");
+const precipitationProbability = document.getElementById("precprob");
+const precipitationType = document.getElementById("precType");
+const humidity = document.getElementById("Humidity");
+const windSpeed = document.getElementById("WindSpeed");
+const windDirection = document.getElementById("WindDirection");
+const fiveHrButton = document.getElementById("5hrs");
+const oneDayButton = document.getElementById("1day");
+// Assumed DOM elements for 5hr and 1day forecasts
+const temperatureWithTime = document.getElementById("temperatureWithTime"); // Add this to your HTML
+const weatherConditionWithTime = document.getElementById("weatherConditionWithTime"); // Add this to your HTML
+const yourAPIkey = 'CpFMzGEgqLofdr48yQR0pAkR0P7r2gHE';
 
+// Store lat and long globally
+let lat = null;
+let long = null;
 
-inputPlace.addEventListener("click")
-button.addEventListener("click", fetchplace)
-
-function fetchplace() {
-    searchValue = getElementById("placeName").value
+function changeTime(millisecs) {
+    const now = new Date();
+    const startTime = now.toISOString();
+    const futureTime = new Date(now.getTime() + millisecs).toISOString();
+    return { startTime, endTime: futureTime };
 }
-function fetchlocation() {
-    fetch("https://nominatim.openstreetmap.org/search?q=searchValue&format=json&limit=1")
-        .then(response => response.json)
-        .then(function (data) {
-            long = data[0].lon
-            lat = data[0].lat
-        })
-        .catch(function (error) {
-            console.error("Error fetching location values:", error)
-        })
 
+button.addEventListener("click", fetchCoordinates);
+
+function fetchCoordinates() {
+    const searchValue = inputPlace.value;
+    if (!searchValue) {
+        console.error("Please enter a location");
+        return;
+    }
+
+    fetch(`https://nominatim.openstreetmap.org/search?q=${searchValue}&format=json&limit=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data || data.length === 0) {
+                throw new Error("No location found");
+            }
+            lat = data[0].lat;
+            long = data[0].lon;
+            return fetchWeather(lat, long);
+        })
+        .catch(error => {
+            console.error("Error fetching location values:", error);
+        });
+}
+
+function fetchWeather(lat, long) {
+    fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${lat},${long}&fields=temperature,temperatureApparent,weatherCode,precipitationProbability,precipitationType,humidity,windSpeed,windDirection&timesteps=1h&apikey=${yourAPIkey}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("API Response:", JSON.stringify(data, null, 2)); // Log the full response
+            if (!data.timelines || !data.timelines.hourly || !data.timelines.hourly[0]) {
+                throw new Error(`Invalid API response structure: ${JSON.stringify(data)}`);
+            }
+            const firstInterval = data.timelines.hourly[0].values;
+            currentTemp.innerHTML = `Temperature: ${firstInterval.temperature} °C`;
+            currentWC.innerHTML = `Weather Condition: ${firstInterval.weatherCode}`;
+            feelsLike.innerHTML = `Feels Like: ${firstInterval.temperatureApparent} °C`;
+            precipitationProbability.innerHTML = `Precipitation Probability: ${firstInterval.precipitationProbability}%`;
+            precipitationType.innerHTML = `Precipitation Type: ${firstInterval.precipitationType || 'None'}`;
+            humidity.innerHTML = `Humidity: ${firstInterval.humidity}%`;
+            windSpeed.innerHTML = `Wind Speed: ${firstInterval.windSpeed} m/s`;
+            windDirection.innerHTML = `Wind Direction: ${firstInterval.windDirection}°`;
+        })
+        .catch(error => {
+            console.error("Couldn’t fetch weather:", error);
+        });
+}
+
+fiveHrButton.addEventListener("click", fetchWeather5hr);
+
+function fetchWeather5hr() {
+    if (!lat || !long) {
+        console.error("Location not set. Please search for a place first.");
+        return;
+    }
+    const { startTime, endTime } = changeTime(18000000); // 5 hours in milliseconds
+    fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${lat},${long}&fields=temperature,weatherCode&timesteps=1h&startTime=${startTime}&endTime=${endTime}&apikey=${yourAPIkey}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.timelines || !data.timelines.hourly || !data.timelines.hourly[0]) {
+                throw new Error("Invalid API response structure");
+            }
+            const intervals = data.timelines.hourly;
+            let temps = "";
+            let weatherCodes = "";
+            for (let i = 0; i < Math.min(5, intervals.length); i++) {
+                temps += `${intervals[i].values.temperature} °C `;
+                weatherCodes += `${intervals[i].values.weatherCode} `;
+            }
+            temperatureWithTime.innerHTML = `5-Hour Temperatures: ${temps}`;
+            weatherConditionWithTime.innerHTML = `5-Hour Weather Codes: ${weatherCodes}`;
+        })
+        .catch(error => {
+            console.error("Couldn’t fetch 5-hour weather:", error);
+        });
+}
+
+oneDayButton.addEventListener("click", fetchWeather1dy);
+
+function fetchWeather1dy() {
+    if (!lat || !long) {
+        console.error("Location not set. Please search for a place first.");
+        return;
+    }
+    const { startTime, endTime } = changeTime(86400000); // 24 hours in milliseconds
+    fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${lat},${long}&fields=temperature,weatherCode&timesteps=1h&startTime=${startTime}&endTime=${endTime}&apikey=${yourAPIkey}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("1dy Weather Response:", JSON.stringify(data, null, 2));
+            if (!data.timelines || !data.timelines.hourly || !data.timelines.hourly[0]) {
+                throw new Error("Invalid API response structure");
+            }
+            const intervals = data.timelines.hourly;
+            let temps = "";
+            let weatherCodes = "";
+            for (let i = 0; i < Math.min(24, intervals.length); i++) {
+                temps += `${intervals[i].values.temperature} °C `;
+                weatherCodes += `${intervals[i].values.weatherCode} `;
+            }
+            temperatureWithTime.innerHTML = `1-Day Temperatures: ${temps}`;
+            weatherConditionWithTime.innerHTML = `1-Day Weather Codes: ${weatherCodes}`;
+        })
+        .catch(error => {
+            console.error("Couldn’t fetch 1-day weather:", error);
+        });
 }
