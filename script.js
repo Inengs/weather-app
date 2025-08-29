@@ -15,6 +15,8 @@ const temperatureWithTime = document.getElementById("temperatureWithTime"); // A
 const weatherConditionWithTime = document.getElementById("weatherConditionWithTime"); // Add this to your HTML
 const yourAPIkey = 'CpFMzGEgqLofdr48yQR0pAkR0P7r2gHE';
 
+
+
 // Store lat and long globally
 let lat = null;
 let long = null;
@@ -50,6 +52,14 @@ function fetchCoordinates() {
         });
 }
 
+// Map weather codes to SVG icons
+const weatherIcons = {
+    1000: `<svg class="weather-icon sunny" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="#ffc107"/><path d="M12 2V4M12 20V22M2 12H4M20 12H22M5.64 5.64L7.05 7.05M16.95 16.95L18.36 18.36M5.64 18.36L7.05 16.95M16.95 7.05L18.36 5.64" stroke="#ffc107" stroke-width="2"/></svg>`, // Clear
+    1001: `<svg class="weather-icon cloudy" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 10H16.74A6 6 0 1 0 6 12H8C9.66 12 11 10.66 11 9C11 7.34 9.66 6 8 6C6.34 6 5 7.34 5 9C5 12.31 7.69 15 11 15H18C19.66 15 21 13.66 21 12C21 10.34 19.66 9 18 9Z" fill="#6c757d"/></svg>`, // Cloudy
+    4001: `<svg class="weather-icon rainy" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 10H16.74A6 6 0 1 0 6 12H8C9.66 12 11 10.66 11 9C11 7.34 9.66 6 8 6C6.34 6 5 7.34 5 9C5 12.31 7.69 15 11 15H18C19.66 15 21 13.66 21 12C21 10.34 19.66 9 18 9Z" fill="#007bff"/><path d="M7 15L6 18M10 15L9 18M13 15L12 18" stroke="#007bff" stroke-width="2"/></svg>`, // Rain
+    6000: `<svg class="weather-icon snowy" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 10H16.74A6 6 0 1 0 6 12H8C9.66 12 11 10.66 11 9C11 7.34 9.66 6 8 6C6.34 6 5 7.34 5 9C5 12.31 7.69 15 11 15H18C19.66 15 21 13.66 21 12C21 10.34 19.66 9 18 9Z" fill="#17a2b8"/><path d="M7 15L7.5 16.5L6 16.5L6.5 15M10 15L10.5 16.5L9 16.5L9.5 15M13 15L13.5 16.5L12 16.5L12.5 15" stroke="#17a2b8" stroke-width="2"/></svg>` // Snow
+};
+
 function fetchWeather(lat, long) {
     fetch(`https://api.tomorrow.io/v4/weather/forecast?location=${lat},${long}&fields=temperature,temperatureApparent,weatherCode,precipitationProbability,precipitationType,humidity,windSpeed,windDirection&timesteps=1h&apikey=${yourAPIkey}`)
         .then(response => {
@@ -66,6 +76,7 @@ function fetchWeather(lat, long) {
             const firstInterval = data.timelines.hourly[0].values;
             currentTemp.innerHTML = `Temperature: ${firstInterval.temperature} °C`;
             currentWC.innerHTML = `Weather Condition: ${firstInterval.weatherCode}`;
+            weatherIcon.innerHTML = weatherIcons[firstInterval.weatherCode] || '';
             feelsLike.innerHTML = `Feels Like: ${firstInterval.temperatureApparent} °C`;
             precipitationProbability.innerHTML = `Precipitation Probability: ${firstInterval.precipitationProbability}%`;
             precipitationType.innerHTML = `Precipitation Type: ${firstInterval.precipitationType || 'None'}`;
